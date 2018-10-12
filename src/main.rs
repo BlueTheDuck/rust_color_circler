@@ -21,7 +21,11 @@ fn main() {
                 output_file_name = args_list.pop().expect("No more arguments passed");
             }
             "--size" => {
-                sector_size = args_list.pop().expect("No more arguments passed").parse::<u32>().expect("Couldn't parse input. It must be an u8");;
+                sector_size = args_list
+                    .pop()
+                    .expect("No more arguments passed")
+                    .parse::<u32>()
+                    .expect("Couldn't parse input. It must be an u8");;
             }
             &_ => {
                 println!("Meaningless {}", arg);
@@ -61,16 +65,29 @@ fn main() {
             act_prom = [0, 0, 0];
         }
     }
-    println!("Finished processing image. {} sectors",map.len());
+    println!("Finished processing image. {} sectors", map.len());
     println!("{:?}", map);
     let img = image::RgbImage::from_fn(width, height, |x, y| {
         /*if (width - width%sector_size)>x || (height - height%sector_size)>y {
             return image::Rgb([255,0,255]);
         }*/
-        let sector_index = (x/sector_size)+(width/sector_size)*(y/sector_size);
+        let sector_index = (x / sector_size) + (width / sector_size) * (y / sector_size);
         let sector_index = sector_index as usize;
-        println!("({};{}) = {} as {:?}",x,y,sector_index,map[sector_index]);
-        let mut newrgb:[u8;3] = [0,0,0];
+        let sector_center: [u32; 2] = [
+            x - x % sector_size + sector_size / 2,
+            y - y % sector_size + sector_size / 2,
+        ];
+        println!(
+            "({};{}) = {} as {:?}. Center is {:?}",
+            x, y, sector_index, map[sector_index], sector_center
+        );
+        let distance_calc = |point:[i32;2],sector_center:[i32;2]| {
+            let dx: u32 = (point[0] - sector_center[0]).abs() as u32;
+            let dy: u32 = (point[1] - sector_center[1]).abs() as u32;
+            let distance:f64 = ((dx.pow(2)+dy.pow(2)) as f64).sqrt();
+            distance
+        };
+        let mut newrgb: [u8; 3] = [0, 0, 0];
         for i in 0..3 {
             newrgb[i] = map[sector_index][i] as u8;
         }
