@@ -1,0 +1,7 @@
+[package]
+name = "color_circler"
+version = "0.1.0"
+authors = ["PeronTheDuck <pedroignacioperezvargas@gmail.com>"]
+
+[dependencies]
+image="0.20.0"
