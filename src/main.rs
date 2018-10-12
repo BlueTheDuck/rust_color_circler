@@ -1,7 +1,6 @@
 extern crate image;
 
 use image::GenericImageView;
-use image::{GenericImage, ImageBuffer};
 
 fn main() {
     let mut sector_size = 5;
@@ -64,10 +63,6 @@ fn main() {
     }
     println!("Finished processing image. {} sectors",map.len());
     println!("{:?}", map);
-    /* let out_img = ImageBuffer::from_fn(width, height, |x, y| {
-        let pixel = image::Rgb(map[s_y * width + s_x]);
-        image::Luma([0u8]);
-    }); */
     let img = image::RgbImage::from_fn(width, height, |x, y| {
         /*if (width - width%sector_size)>x || (height - height%sector_size)>y {
             return image::Rgb([255,0,255]);
@@ -83,20 +78,4 @@ fn main() {
     });
 
     img.save(output_file_name);
-
-    /*for a_edge in 0..m_edge {
-        let mut amount_pixel_processed: u32 = 0;
-        let mut act_sum_rgb = [0, 0, 0];
-        let mut act_prom_rgb = [0, 0, 0];
-        for y in 0..a_edge {
-            for x in 0..a_edge {
-                let pixel = img.get_pixel(x, y);
-                for i in 0..2 {
-                    act_sum_rgb[i] = act_sum_rgb[i] + pixel[i] as u32;
-                    act_prom_rgb[i] = act_sum_rgb[i] / amount_pixel_processed;
-                }
-                amount_pixel_processed = amount_pixel_processed + 1;
-            }
-        }
-    }*/
 }
