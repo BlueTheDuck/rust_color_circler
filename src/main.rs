@@ -4,6 +4,7 @@ use image::GenericImageView;
 
 fn main() {
     let mut sector_size = 5;
+    let mut verbose = false;
 
     let mut input_file_name = String::from("picture.jpg");
     let mut output_file_name = String::from("output.png");
@@ -27,6 +28,13 @@ fn main() {
                     .parse::<u32>()
                     .expect("Couldn't parse input. It must be an u8");;
             }
+            "--verbose" => {
+                verbose = args_list
+                    .pop()
+                    .expect("No more arguments passed")
+                    .parse::<bool>()
+                    .expect("Couldn't parse input. It must be a bool");;
+            }
             &_ => {
                 println!("Meaningless {}", arg);
             }
@@ -36,7 +44,7 @@ fn main() {
     let img = image::open(&input_file_name).expect("Couldn't open file");
     let (width, height) = (img.width(), img.height());
 
-    println!("{} is {}x{}", &input_file_name, width, height);
+    println!("{} is {}x{}. Processing with {} as rad", &input_file_name, width, height, sector_size);
 
     let mut map: Vec<[u32; 3]> = vec![];
     let mut act_prom: [u32; 3] = [0, 0, 0];
@@ -49,7 +57,9 @@ fn main() {
             if (x + sector_size) > width {
                 break;
             }
-            println!("Working on ({}:{})", x, y);
+
+            //println!("Working on ({}:{})", x, y);
+            
             for s_y in y..(y + sector_size) {
                 for s_x in x..(x + sector_size) {
                     for i in 0..3 {
@@ -60,39 +70,48 @@ fn main() {
             for i in 0..3 {
                 act_prom[i] = act_prom[i] / (sector_size * sector_size);
             }
-            println!("Pushed");
             map.push(act_prom);
             act_prom = [0, 0, 0];
         }
+        if verbose {
+            println!("{} rows of {} rows",height,y);
+        }
     }
     println!("Finished processing image. {} sectors", map.len());
-    println!("{:?}", map);
+    
     let img = image::RgbImage::from_fn(width, height, |x, y| {
-        /*if (width - width%sector_size)>x || (height - height%sector_size)>y {
-            return image::Rgb([255,0,255]);
-        }*/
-        let sector_index = (x / sector_size) + (width / sector_size) * (y / sector_size);
-        let sector_index = sector_index as usize;
-        let sector_center: [u32; 2] = [
-            x - x % sector_size + sector_size / 2,
-            y - y % sector_size + sector_size / 2,
-        ];
-        println!(
-            "({};{}) = {} as {:?}. Center is {:?}",
-            x, y, sector_index, map[sector_index], sector_center
-        );
-        let distance_calc = |point:[i32;2],sector_center:[i32;2]| {
+        let distance_calc = |point: [i32; 2], sector_center: [i32; 2]| {
             let dx: u32 = (point[0] - sector_center[0]).abs() as u32;
             let dy: u32 = (point[1] - sector_center[1]).abs() as u32;
-            let distance:f64 = ((dx.pow(2)+dy.pow(2)) as f64).sqrt();
+            let distance: f64 = ((dx.pow(2) + dy.pow(2)) as f64).sqrt();
             distance
         };
-        let mut newrgb: [u8; 3] = [0, 0, 0];
-        for i in 0..3 {
-            newrgb[i] = map[sector_index][i] as u8;
+
+        let sector_index = (x / sector_size) + (width / sector_size) * (y / sector_size);
+        let sector_index = sector_index as usize;
+        let sector_center: [i32; 2] = [
+            (x - x % sector_size + sector_size / 2) as i32,
+            (y - y % sector_size + sector_size / 2) as i32,
+        ];
+        /* println!(
+            "({};{}) = {} as {:?}. Center is {:?}, and distance is {}",
+            x,
+            y,
+            sector_index,
+            map[sector_index],
+            sector_center,
+            distance_calc(sector_center, [x as i32, y as i32])
+        ); */
+
+        if distance_calc(sector_center, [x as i32, y as i32]) > (sector_size as f64) / 2f64 {
+            return image::Rgb([0xFF, 0xFF, 0xFF]);
         }
-        image::Rgb(newrgb)
+        image::Rgb([
+            map[sector_index][0] as u8,
+            map[sector_index][1] as u8,
+            map[sector_index][2] as u8,
+        ])
     });
 
-    img.save(output_file_name);
+    img.save(output_file_name).expect("Couldn't save file");
 }
