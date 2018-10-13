@@ -6,7 +6,7 @@ fn main() {
     let mut sector_size = 5;
     let mut verbose = false;
 
-    let mut input_file_name = String::from("picture.jpg");
+    let mut input_file_name = String::from("input.png");
     let mut output_file_name = String::from("output.png");
     //#region Argument handling
     let mut args_list: Vec<_> = std::env::args().rev().collect();
