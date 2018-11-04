@@ -6,6 +6,7 @@ fn main() {
     let mut sector_size = 5;
     let mut radius = (sector_size as f64) / 2f64;
     let mut verbose = false;
+    let mut quad = false;
 
     let mut input_file_name = String::from("input.png");
     let mut output_file_name = String::from("output.png");
@@ -41,7 +42,15 @@ fn main() {
                     .pop()
                     .expect("No more arguments passed")
                     .parse::<bool>()
-                    .expect("Couldn't parse input. It must be a bool");;
+                    .expect("Couldn't parse input. It must be a bool");
+            }
+            "--quad" => {
+                quad = match args_list.pop() {
+                    Some(e) => e
+                        .parse::<bool>()
+                        .expect("Couldn't parse input. It must be a bool"),
+                    None => true,
+                }
             }
             &_ => {
                 println!("Meaningless {}", arg);
@@ -53,8 +62,8 @@ fn main() {
     let (width, height) = (img.width(), img.height());
 
     println!(
-        "{} is {}x{}. Processing with {}/{} as size/rad",
-        &input_file_name, width, height, sector_size, radius
+        "{} is {}x{}. Processing with {}/{} as size/rad. Using {}",
+        &input_file_name, width, height, sector_size, radius,(match quad{true=>"quads",false=>"circles"})
     );
 
     let mut map: Vec<[u32; 3]> = vec![];
@@ -69,8 +78,6 @@ fn main() {
             if (x + sector_size) > width {
                 break;
             }
-
-            //println!("Working on ({}:{})", x, y);
 
             for s_y in y..(y + sector_size) {
                 for s_x in x..(x + sector_size) {
@@ -108,7 +115,7 @@ fn main() {
             (y - y % sector_size + sector_size / 2) as i32,
         ];
 
-        if distance_calc(sector_center, [x as i32, y as i32]) > radius {
+        if (distance_calc(sector_center, [x as i32, y as i32]) > radius)&&!quad {
             return image::Rgb([0xFF, 0xFF, 0xFF]);
         }
         image::Rgb([
